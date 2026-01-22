@@ -19,12 +19,9 @@ import wasm from 'vite-plugin-wasm';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import fs from 'fs';
 import path from 'path';
-// ❌ remove this line:
-// import topLevelAwait from 'vite-plugin-top-level-await'
 
 export default defineConfig({
   define: {
-    __MIDNIGHT_STORAGE_PASSWORD__: JSON.stringify(process.env.MIDNIGHT_STORAGE_PASSWORD || ''),
     global: 'globalThis',
   },
   resolve: {
