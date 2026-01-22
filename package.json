@@ -13,7 +13,8 @@
     "env:up": "TESTCONTAINERS_UID=999 docker compose -f compose.yml up -d",
     "env:down": "docker compose -f compose.yml down",
     "compact": "COMPACTC_VERSION=0.28.0-rc.0 yarn fetch-compactc && yarn contract-demo",
-    "contract-demo": "COMPACTC_VERSION=0.28.0-rc.0 yarn run-compactc src/contract/contracts/unshielded-demo.compact src/contract/build/unshielded-demo"
+    "contract-demo": "COMPACTC_VERSION=0.28.0-rc.0 yarn run-compactc src/contract/contracts/unshielded-demo.compact src/contract/build/unshielded-demo",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@apollo/client": "^4.0.8",
@@ -44,6 +45,7 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "@midnight-ntwrk/midnight-js-compact": "^3.0.0-alpha.15",
     "@types/lodash": "^4",
     "@types/react": "^19.2.2",

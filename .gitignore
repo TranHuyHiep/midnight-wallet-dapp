@@ -147,3 +147,7 @@ dist
 # and uncomment the following lines
 # .pnp.*
 
+# Playwright
+test-results/
+playwright-report/
+

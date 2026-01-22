@@ -31,6 +31,7 @@ Open http://localhost:5173 and click **Connect Lace (Midnight)**.
 | `yarn dapp:docker` | Run dApp via Docker Compose (port 8080) |
 | `yarn env:up` | Start local blockchain environment |
 | `yarn env:down` | Stop local blockchain environment |
+| `yarn test:e2e` | Run Playwright e2e smoke tests |
 
 ## Project Structure
 

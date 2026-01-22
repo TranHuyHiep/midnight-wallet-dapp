@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-import { ContractDemo } from '../contract/index'
-import { ImpureCircuitId, MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
+import { test, expect } from '@playwright/test';
 
-export type DemoContract = ContractDemo.Contract<undefined>;
+test('app loads and displays title', async ({ page }) => {
+  await page.goto('/');
 
-export type DemoCircuits = ImpureCircuitId<DemoContract>;
-
-export type DemoProviders = MidnightProviders<DemoCircuits>;
-
-export const createSimpleContractInstance = (): DemoContract => new ContractDemo.Contract({});
+  await expect(page).toHaveTitle(/Midnight/i);
+  await expect(page.locator('h1')).toBeVisible();
+});

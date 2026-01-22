@@ -13,13 +13,20 @@
  * limitations under the License.
  */
 
-import { ContractDemo } from '../contract/index'
-import { ImpureCircuitId, MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
+import { defineConfig } from '@playwright/test';
 
-export type DemoContract = ContractDemo.Contract<undefined>;
-
-export type DemoCircuits = ImpureCircuitId<DemoContract>;
-
-export type DemoProviders = MidnightProviders<DemoCircuits>;
-
-export const createSimpleContractInstance = (): DemoContract => new ContractDemo.Contract({});
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 30000,
+  retries: 0,
+  use: {
+    baseURL: 'http://localhost:5173',
+    headless: true,
+  },
+  webServer: {
+    command: 'yarn dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+  },
+});
