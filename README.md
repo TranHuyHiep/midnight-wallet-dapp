@@ -1,72 +1,140 @@
-# Midnight Template Repository
+# Midnight Wallet dApp
 
-This GitHub repository should be used as a template when creating a new Midnight GitHub repository.
-The template is configured with default repository settings and a set of default files that are expected to exist in all Midnight GitHub repositories.
+A minimal React + Vite starter template for building decentralized applications on the Midnight network. Demonstrates wallet integration with Lace (Midnight edition), deploying Compact smart contracts, and token operations (minting, claiming, depositing, withdrawing).
 
-### LICENSE
+## Prerequisites
 
-Apache 2.0.
+- **Node.js** 22+
+- **Yarn** (configured via `.yarnrc.yml`)
+- **Lace Wallet** (Midnight edition) installed and unlocked in your browser
+- Access to a Midnight test environment (preview, qanet, or local)
 
-### README.md
+## Quick Start
 
-Provides a brief description for users and developers who want to understand the purpose, setup, and usage of the repository.
+```bash
+yarn install
+yarn dev
+```
 
-### SECURITY.md
+Open http://localhost:5173 and click **Connect Lace (Midnight)**.
 
-Provides a brief description of the Midnight Foundation's security policy and how to properly disclose security issues.
+## Available Scripts
 
-### CONTRIBUTING.md
+| Script               | Description                             |
+| -------------------- | --------------------------------------- |
+| `yarn dev`           | Start development server (port 5173)    |
+| `yarn build`         | Build for production                    |
+| `yarn preview`       | Preview production build                |
+| `yarn compact`       | Compile Compact contracts               |
+| `yarn contract-demo` | Generate contract build artifacts       |
+| `yarn build:docker`  | Build Docker image                      |
+| `yarn dapp:docker`   | Run dApp via Docker Compose (port 8080) |
+| `yarn env:up`        | Start local blockchain environment      |
+| `yarn env:down`      | Stop local blockchain environment       |
+| `yarn test:e2e`      | Run Playwright e2e smoke tests          |
+| `yarn lint`          | Run ESLint                              |
+| `yarn lint:fix`      | Run ESLint with auto-fix                |
+| `yarn format`        | Format code with Prettier               |
+| `yarn format:check`  | Check code formatting                   |
 
-Provides guidelines for how people can contribute to the Midnight project.
+## Project Structure
 
-### CODEOWNERS
+```
+src/
+├── App.tsx                 # Main React component with wallet/contract logic
+├── main.tsx                # Application entry point
+├── styles.css              # Global styles (dark theme)
+├── polyfills.ts            # Node.js polyfills for browser
+├── lib/
+│   ├── providers.ts        # MidnightJS provider factory
+│   ├── walletAdapter.ts    # Wallet DApp connector adapter
+│   ├── faucet.ts           # Faucet token transfer utilities
+│   └── types.ts            # Contract type definitions
+└── contract/
+    ├── contracts/          # Compact contract source (.compact)
+    └── build/              # Compiled artifacts (keys, zkir, modules)
+```
 
-Defines repository ownership rules.
+## Technology Stack
 
-### ISSUE_TEMPLATE
+- **React 19** + **Vite 7** + **TypeScript 5.9**
+- **MidnightJS** libraries for blockchain interaction
+- **Apollo Client** for GraphQL subscriptions
+- **RxJS** for reactive streams
+- **Level** (IndexedDB) for private state storage
 
-Provides templates for reporting various types of issues, such as: bug report, documentation improvement and feature request.
+## Architecture
 
-### PULL_REQUEST_TEMPLATE
+The app integrates with Midnight through these provider layers:
 
-Provides a template for a pull request.
+| Provider                    | Purpose                                                      |
+| --------------------------- | ------------------------------------------------------------ |
+| `levelPrivateStateProvider` | IndexedDB-backed storage for private states and signing keys |
+| `indexerPublicDataProvider` | GraphQL Indexer client for blockchain data                   |
+| `FetchZkConfigProvider`     | Fetches ZK keys and zkIR from the node                       |
+| `httpClientProofProvider`   | HTTP client to the proof server                              |
+| Wallet Adapter              | DApp connector for key management and transaction submission |
 
-### CLA Assistant
+The wallet connector is expected at `window.midnight.lace` and must support `enable`, `getServiceURIs`, `balanceTransaction`, `submitTransaction`.
 
-The Midnight Foundation appreciates contributions, and like many other open source projects asks contributors to sign a contributor
-License Agreement before accepting contributions. We use CLA assistant (https://github.com/cla-assistant/cla-assistant) to streamline the CLA
-signing process, enabling contributors to sign our CLAs directly within a GitHub pull request.
+## Features
 
-### Dependabot
+- **Wallet Connection**: Auto-detects Midnight wallet APIs, supports multiple networks
+- **Contract Deployment**: Deploy the unshielded-demo Compact contract
+- **Token Operations**:
+  - Mint tokens with unique color identifier
+  - Claim minted tokens to wallet address
+  - Deposit/withdraw unshielded tokens
+  - Deposit/withdraw NIGHT tokens
+- **Activity Log**: Real-time transaction monitoring with timestamps
 
-The Midnight Foundation uses GitHub Dependabot feature to keep our projects dependencies up-to-date and address potential security vulnerabilities.
+## Docker Deployment
 
-### Checkmarx
+**Build and run:**
 
-The Midnight Foundation uses Checkmarx for application security (AppSec) to identify and fix security vulnerabilities.
-All repositories are scanned with Checkmarx's suite of tools including: Static Application Security Testing (SAST), Infrastructure as Code (IaC), Software Composition Analysis (SCA), API Security, Container Security and Supply Chain Scans (SCS).
+```bash
+docker build -t midnight-lace-dapp .
+docker run -p 8080:8080 midnight-lace-dapp
+```
 
-### Unito
+**Or via Docker Compose:**
 
-Facilitates two-way data synchronization, automated workflows and streamline processes between: Jira, GitHub issues and Github project Kanban board.
+```bash
+yarn dapp:docker
+```
 
-# TODO - New Repo Owner
+Access at http://localhost:8080
 
-### Software Package Data Exchange (SPDX)
-Include the following Software Package Data Exchange (SPDX) short-form identifier in a comment at the top headers of each source code file.
+## Local Blockchain Environment
 
+Start a complete local environment with proof-server, indexer, and midnight-node:
 
- <I>// This file is part of <B>REPLACE WITH REPO-NAME</B>.<BR>
- // Copyright (C) 2025 Midnight Foundation<BR>
- // SPDX-License-Identifier: Apache-2.0<BR>
- // Licensed under the Apache License, Version 2.0 (the "License");<BR>
- // You may not use this file except in compliance with the License.<BR>
- // You may obtain a copy of the License at<BR>
- //<BR>
- //	https://www.apache.org/licenses/LICENSE-2.0<BR>
- //<BR>
- // Unless required by applicable law or agreed to in writing, software<BR>
- // distributed under the License is distributed on an "AS IS" BASIS,<BR>
- // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<BR>
- // See the License for the specific language governing permissions and<BR>
- // limitations under the License.</I>
+```bash
+yarn env:up      # Start services
+yarn env:down    # Stop services
+```
+
+Services:
+
+- **Proof Server**: port 6300
+- **Indexer**: port 8088
+- **Midnight Node**: port 9944
+
+## Development
+
+Pre-push hooks are configured via Husky to run:
+
+- `yarn lint` - ESLint checks
+- `yarn tsc --noEmit` - TypeScript type checking
+
+Hooks are automatically installed when running `yarn install`.
+
+## Security
+
+- Keys never leave the wallet; all signing happens in Lace
+- Transaction balancing and proofs handled by wallet + proof server
+- **Testnet only** — review and harden before any production use
+
+## License
+
+See [LICENSE](LICENSE) for details.
