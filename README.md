@@ -1,45 +1,123 @@
 # Midnight Wallet dApp
 
-A minimal React + Vite app that connects to a Midnight wallet (Lace — Midnight edition via the DApp connector),
-builds the required MidnightJS providers from the wallet’s service URIs, and uses `@midnight-ntwrk/midnight-js-contracts`
-helpers to deploy a Compact contract, call `mintTest`, and transfer tokens to a wallet.
+A minimal React + Vite starter template for building decentralized applications on the Midnight network. Demonstrates wallet integration with Lace (Midnight edition), deploying Compact smart contracts, and token operations (minting, claiming, depositing, withdrawing).
 
-## What you need
-- Midnight-enabled Lace wallet installed in your browser and unlocked.
-- Access to a Midnight test environment (the wallet exposes the Indexer, WS, Prover and Node URLs).
-- Your Compact contracts compiled to ESM modules (`.mjs`) so the app can `import()` them at runtime.
+## Prerequisites
 
-## Run locally
+- **Node.js** 20+
+- **Yarn** (configured via `.yarnrc.yml`)
+- **Lace Wallet** (Midnight edition) installed and unlocked in your browser
+- Access to a Midnight test environment (preview, qanet, or local)
+
+## Quick Start
+
 ```bash
-yarn i   # or yarn / npm
+yarn install
 yarn dev
 ```
-Open http://localhost:5173 and **Connect Lace (Midnight)**.
 
-## Notes / design
-- The app uses these MidnightJS providers:
-  - `levelPrivateStateProvider()` — IndexedDB-backed storage for private states and signing keys.
-  - `indexerPublicDataProvider(httpUrl, wsUrl)` — GraphQL Indexer client.
-  - `new FetchZkConfigProvider(nodeUrl)` — fetches ZK keys and zkIR from the node.
-  - `httpClientProofProvider(proverUrl)` — HTTP client to the proof server.
-  - A thin wallet adapter (via the DApp connector) to implement the `WalletProvider` and `MidnightProvider` interfaces.
-- The wallet DApp connector is expected at `window.midnight.lace` and must support `enable`, `getServiceURIs`, `balanceTransaction`, `submitTransaction`.
+Open http://localhost:5173 and click **Connect Lace (Midnight)**.
 
-## Security
-- Keys never leave the wallet; proofs and submission are handled by the wallet + proof server.
-- This is a testnet-only starter. Review and harden before production.
+## Available Scripts
 
-## Docker
+| Script | Description |
+|--------|-------------|
+| `yarn dev` | Start development server (port 5173) |
+| `yarn build` | Build for production |
+| `yarn preview` | Preview production build |
+| `yarn compact` | Compile Compact contracts |
+| `yarn contract-demo` | Generate contract build artifacts |
+| `yarn build:docker` | Build Docker image |
+| `yarn dapp:docker` | Run dApp via Docker Compose (port 8080) |
+| `yarn env:up` | Start local blockchain environment |
+| `yarn env:down` | Stop local blockchain environment |
 
-```shell
+## Project Structure
+
+```
+src/
+├── App.tsx                 # Main React component with wallet/contract logic
+├── main.tsx                # Application entry point
+├── styles.css              # Global styles (dark theme)
+├── polyfills.ts            # Node.js polyfills for browser
+├── lib/
+│   ├── providers.ts        # MidnightJS provider factory
+│   ├── walletAdapter.ts    # Wallet DApp connector adapter
+│   ├── faucet.ts           # Faucet token transfer utilities
+│   └── types.ts            # Contract type definitions
+└── contract/
+    ├── contracts/          # Compact contract source (.compact)
+    └── build/              # Compiled artifacts (keys, zkir, modules)
+```
+
+## Technology Stack
+
+- **React 19** + **Vite 7** + **TypeScript 5.9**
+- **MidnightJS** libraries for blockchain interaction
+- **Apollo Client** for GraphQL subscriptions
+- **RxJS** for reactive streams
+- **Level** (IndexedDB) for private state storage
+
+## Architecture
+
+The app integrates with Midnight through these provider layers:
+
+| Provider | Purpose |
+|----------|---------|
+| `levelPrivateStateProvider` | IndexedDB-backed storage for private states and signing keys |
+| `indexerPublicDataProvider` | GraphQL Indexer client for blockchain data |
+| `FetchZkConfigProvider` | Fetches ZK keys and zkIR from the node |
+| `httpClientProofProvider` | HTTP client to the proof server |
+| Wallet Adapter | DApp connector for key management and transaction submission |
+
+The wallet connector is expected at `window.midnight.lace` and must support `enable`, `getServiceURIs`, `balanceTransaction`, `submitTransaction`.
+
+## Features
+
+- **Wallet Connection**: Auto-detects Midnight wallet APIs, supports multiple networks
+- **Contract Deployment**: Deploy the unshielded-demo Compact contract
+- **Token Operations**:
+  - Mint tokens with unique color identifier
+  - Claim minted tokens to wallet address
+  - Deposit/withdraw unshielded tokens
+  - Deposit/withdraw NIGHT tokens
+- **Activity Log**: Real-time transaction monitoring with timestamps
+
+## Docker Deployment
+
+**Build and run:**
+```bash
 docker build -t midnight-lace-dapp .
 docker run -p 8080:8080 midnight-lace-dapp
 ```
 
-OR
-
-```shell
+**Or via Docker Compose:**
+```bash
 yarn dapp:docker
 ```
 
-Access at: `http://localhost:8080`
+Access at http://localhost:8080
+
+## Local Blockchain Environment
+
+Start a complete local environment with proof-server, indexer, and midnight-node:
+
+```bash
+yarn env:up      # Start services
+yarn env:down    # Stop services
+```
+
+Services:
+- **Proof Server**: port 6300
+- **Indexer**: port 8088
+- **Midnight Node**: port 9944
+
+## Security
+
+- Keys never leave the wallet; all signing happens in Lace
+- Transaction balancing and proofs handled by wallet + proof server
+- **Testnet only** — review and harden before any production use
+
+## License
+
+See [LICENSE](LICENSE) for details.
