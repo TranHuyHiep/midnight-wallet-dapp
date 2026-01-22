@@ -4,7 +4,7 @@ A minimal React + Vite starter template for building decentralized applications 
 
 ## Prerequisites
 
-- **Node.js** 20+
+- **Node.js** 22+
 - **Yarn** (configured via `.yarnrc.yml`)
 - **Lace Wallet** (Midnight edition) installed and unlocked in your browser
 - Access to a Midnight test environment (preview, qanet, or local)
