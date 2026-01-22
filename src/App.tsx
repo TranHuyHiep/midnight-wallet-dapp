@@ -29,6 +29,8 @@ import {
   setNetworkId as setGlobalNetworkId,
   type NetworkId,
 } from '@midnight-ntwrk/midnight-js-network-id';
+import * as CompiledContract from './contract/index.js';
+import {MidnightProviders} from "@midnight-ntwrk/midnight-js-types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MidnightWindow = Window & { midnight?: Record<string, any>; cardano?: unknown };
@@ -62,11 +64,9 @@ export default function App() {
   const [availableAPIs, setAvailableAPIs] = useState<InitialAPI[]>([]);
   const [connectedAPI, setConnectedAPI] = useState<ConnectedAPI | null>(null);
   const [networkId, setNetworkIdState] = useState<string>('undeployed');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [providers, setProviders] = useState<any | null>(null);
+  const [providers, setProviders] = useState<MidnightProviders | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [deployed, setDeployed] = useState<DeployedContract<any> | null>(null);
+  const [deployed, setDeployed] = useState<DeployedContract<CompiledContract.Contract> | null>(null);
   const [contractInstance, setContractInstance] = useState<DemoContract | null>(null);
 
   const [mintAmount, setMintAmount] = useState<string>('1000');
@@ -237,7 +237,7 @@ export default function App() {
       circuitId: 'mintAndReceive' as DemoCircuits,
       args: [BigInt(mintAmount)] as [bigint],
     } as const;
-    const callTxData = await submitCallTx(providers, callTxOptions);
+    const callTxData = await submitCallTx(providers!, callTxOptions);
     const colorBytes32 = callTxData.private.result as Uint8Array;
     const hex = Array.from(colorBytes32)
       .map((b) => b.toString(16).padStart(2, '0'))
@@ -269,7 +269,7 @@ export default function App() {
       args: [BigInt(claimAmount), { bytes: addressBytes }] as [bigint, { bytes: Uint8Array }],
     };
 
-    await submitCallTx(providers, callTxOptions);
+    await submitCallTx(providers!, callTxOptions);
     appendLog(`Claimed ${claimAmount} tokens to address ${address.unshieldedAddress}`);
   }
 
@@ -284,7 +284,7 @@ export default function App() {
         args: [BigInt(receiveAmount)] as [bigint],
       };
 
-      await submitCallTx(providers, callTxOptions);
+      await submitCallTx(providers!, callTxOptions);
       appendLog(`Received ${receiveAmount} tokens`);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
@@ -305,7 +305,7 @@ export default function App() {
         args: [BigInt(depositNightAmount)] as [bigint],
       };
 
-      await submitCallTx(providers, callTxOptions);
+      await submitCallTx(providers!, callTxOptions);
       appendLog(`Deposited ${depositNightAmount} NIGHT tokens`);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
@@ -340,7 +340,7 @@ export default function App() {
         ],
       };
 
-      await submitCallTx(providers, callTxOptions);
+      await submitCallTx(providers!, callTxOptions);
       appendLog(`Withdrew ${withdrawNightAmount} NIGHT tokens to ${address.unshieldedAddress}`);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
