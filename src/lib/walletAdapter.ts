@@ -22,11 +22,9 @@ import {
 import {
   Binding,
   CoinPublicKey,
-  CostModel,
   EncPublicKey,
   FinalizedTransaction,
-  PreBinding,
-  PreProof, Proof,
+  Proof,
   SignatureEnabled,
 } from '@midnight-ntwrk/ledger-v7';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
