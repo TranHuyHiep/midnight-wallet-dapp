@@ -16,7 +16,7 @@ import { CompiledContract } from '@midnight-ntwrk/compact-js';
 
 import * as CompiledOutput from '../contract/index';
 import { MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
-import {ImpureCircuitId} from "@midnight-ntwrk/compact-js";
+import { ImpureCircuitId } from '@midnight-ntwrk/compact-js';
 
 export type DemoContract = CompiledOutput.Contract<undefined>;
 
@@ -26,8 +26,10 @@ export type DemoProviders = MidnightProviders<DemoCircuits>;
 
 export const createSimpleContractInstance = (): DemoContract => new CompiledOutput.Contract({});
 
-export const CompiledDemoContract =
-  CompiledContract.make<CompiledOutput.Contract>('UnshieldedDemo', CompiledOutput.Contract).pipe(
-    CompiledContract.withVacantWitnesses,
-    CompiledContract.withCompiledFileAssets('./contract/build/unshielded-demo')
-  );
+export const CompiledDemoContract = CompiledContract.make<CompiledOutput.Contract>(
+  'UnshieldedDemo',
+  CompiledOutput.Contract
+).pipe(
+  CompiledContract.withVacantWitnesses,
+  CompiledContract.withCompiledFileAssets('./contract/build/unshielded-demo')
+);

@@ -137,12 +137,9 @@ export async function transferUnshieldedFromFaucet(
   const faucetFacade = new WalletFacade(faucetShielded, faucetUnshielded, faucetDust);
 
   const shieldedSecretKeys = ledger.ZswapSecretKeys.fromSeed(faucetShieldedSeed);
-  const dustSecretKey  = ledger.DustSecretKey.fromSeed(faucetDustSeed);
+  const dustSecretKey = ledger.DustSecretKey.fromSeed(faucetDustSeed);
 
-  await faucetFacade.start(
-    shieldedSecretKeys,
-    dustSecretKey
-  );
+  await faucetFacade.start(shieldedSecretKeys, dustSecretKey);
 
   console.log('transferUnshieldedFromFaucet: waiting for sync...');
   await waitForFullySynced(faucetFacade);
