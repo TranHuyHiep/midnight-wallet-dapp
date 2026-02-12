@@ -27,6 +27,8 @@ import * as ledger from '@midnight-ntwrk/ledger-v7';
 import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import * as Rx from 'rxjs';
 
+// This is a well-known, PUBLIC seed used only for the local "undeployed" testnet.
+// It is NOT secret — anyone can derive its keys. Never fund this seed on a public network.
 const FAUCET_SEED = '0000000000000000000000000000000000000000000000000000000000000002';
 
 const getShieldedSeed = (seed: string): Uint8Array => {
