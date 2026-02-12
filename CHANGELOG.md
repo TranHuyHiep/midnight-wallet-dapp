@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2025-02-12
 
 ### Added
+
 - Wallet connection via Midnight DApp Connector API (Lace wallet support)
 - Contract deployment for the `unshielded-demo` Compact contract
 - Token operations: mint, claim, deposit, and withdraw unshielded tokens
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - License header enforcement via GitHub Actions
 
 ### Dependencies
+
 - MidnightJS SDK v3.0.0
 - Wallet SDK Facade v1.0.0
 - Ledger v7.0.0
