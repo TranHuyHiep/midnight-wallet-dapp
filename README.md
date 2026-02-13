@@ -129,6 +129,10 @@ Pre-push hooks are configured via Husky to run:
 
 Hooks are automatically installed when running `yarn install`.
 
+## Testing
+
+This dApp is itself a test harness — wallet developers run it to exercise their wallet implementation against real contract operations (deploy, mint, claim, deposit, withdraw). The included `yarn test:e2e` Playwright smoke test verifies the app builds and loads correctly, but the meaningful testing happens interactively through the UI with a connected wallet.
+
 ## Security
 
 - Keys never leave the wallet; all signing happens in Lace
