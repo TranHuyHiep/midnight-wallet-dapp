@@ -128,10 +128,7 @@ export async function transferUnshieldedFromFaucet(
   const dustParameters = ledger.LedgerParameters.initialParameters().dust;
   const faucetDust = Dust.startWithSeed(faucetDustSeed, dustParameters);
 
-  const faucetUnshieldedKeystore = createKeystore(
-    faucetUnshieldedSeed,
-    NetworkId.NetworkId.Undeployed
-  );
+  const faucetUnshieldedKeystore = createKeystore(faucetUnshieldedSeed, NetworkId.NetworkId.Undeployed);
   const faucetUnshielded = UnshieldedWallet({
     ...configuration,
     txHistoryStorage: new InMemoryTransactionHistoryStorage(),

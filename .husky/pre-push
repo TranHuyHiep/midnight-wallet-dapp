@@ -1,1 +1,1 @@
-yarn lint && yarn tsc --noEmit
+yarn format:check && yarn lint && yarn tsc --noEmit
