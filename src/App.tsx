@@ -14,11 +14,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import {
-  deployContract,
-  type DeployedContract,
-  submitCallTx,
-} from '@midnight-ntwrk/midnight-js-contracts';
+import { deployContract, type DeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { buildProvidersFromConnectedAPI } from './lib/providers';
 import type { InitialAPI, ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import './styles.css';
@@ -31,10 +27,7 @@ import {
 } from './lib/types';
 import { transferUnshieldedFromFaucet } from './lib/faucet';
 import { bech32m } from 'bech32';
-import {
-  setNetworkId as setGlobalNetworkId,
-  type NetworkId,
-} from '@midnight-ntwrk/midnight-js-network-id';
+import { setNetworkId as setGlobalNetworkId, type NetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import * as CompiledContract from './contract/index.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,9 +64,7 @@ export default function App() {
   const [networkId, setNetworkIdState] = useState<string>('undeployed');
   const [providers, setProviders] = useState<DemoProviders | null>(null);
 
-  const [deployed, setDeployed] = useState<DeployedContract<CompiledContract.Contract> | null>(
-    null
-  );
+  const [deployed, setDeployed] = useState<DeployedContract<CompiledContract.Contract> | null>(null);
   const [contractInstance, setContractInstance] = useState<DemoContract | null>(null);
 
   const [mintAmount, setMintAmount] = useState<string>('1000');
@@ -84,8 +75,7 @@ export default function App() {
   const [mintedColor, setMintedColor] = useState<string>('');
   const [txLog, setTxLog] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const appendLog = (msg: string) =>
-    setTxLog((prev) => [new Date().toLocaleTimeString() + ': ' + msg, ...prev]);
+  const appendLog = (msg: string) => setTxLog((prev) => [new Date().toLocaleTimeString() + ': ' + msg, ...prev]);
 
   // Important: MidnightJS has a *global* network-id that must match the wallet/network.
   // If this is left at the default (often `undeployed`), transactions can be built for the
@@ -152,10 +142,7 @@ export default function App() {
       appendLog(`Network: ${config.networkId}`);
       appendLog(`Indexer: ${config.indexerUri}`);
 
-      const demoCircuitsMidnightProviders = await buildProvidersFromConnectedAPI(
-        connected,
-        'unshielded-demo'
-      );
+      const demoCircuitsMidnightProviders = await buildProvidersFromConnectedAPI(connected, 'unshielded-demo');
 
       setProviders(demoCircuitsMidnightProviders);
       appendLog('Providers initialized for Mint Contract');
@@ -167,10 +154,7 @@ export default function App() {
         const dustBalance = await connected.getDustBalance();
 
         const shieldedTotal = Object.values(shieldedBalances).reduce((sum, val) => sum + val, 0n);
-        const unshieldedTotal = Object.values(unshieldedBalances).reduce(
-          (sum, val) => sum + val,
-          0n
-        );
+        const unshieldedTotal = Object.values(unshieldedBalances).reduce((sum, val) => sum + val, 0n);
 
         appendLog(
           `Balances - Shielded: ${shieldedTotal.toString()}, Unshielded: ${unshieldedTotal.toString()}, Dust: ${dustBalance.balance.toString()} / ${dustBalance.cap.toString()}`
@@ -382,10 +366,7 @@ export default function App() {
         compiledContract: CompiledDemoContract,
         contractAddress: deployed.deployTxData.public.contractAddress,
         circuitId: 'sendNightTokensToUser' as DemoCircuits,
-        args: [BigInt(withdrawNightAmount), { bytes: addressBytes }] as [
-          bigint,
-          { bytes: Uint8Array },
-        ],
+        args: [BigInt(withdrawNightAmount), { bytes: addressBytes }] as [bigint, { bytes: Uint8Array }],
       };
 
       await submitCallTx(providers!, callTxOptions);
@@ -414,11 +395,7 @@ export default function App() {
           <div className="wallet-info">
             <div className="status-badge" data-connected={!!connectedAPI}>
               <span className="status-dot"></span>
-              {connectedAPI
-                ? 'Connected'
-                : availableAPIs.length > 0
-                  ? 'Wallet Detected'
-                  : 'No Wallet'}
+              {connectedAPI ? 'Connected' : availableAPIs.length > 0 ? 'Wallet Detected' : 'No Wallet'}
             </div>
             {connectedAPI && (
               <div className="network-info">
@@ -447,22 +424,14 @@ export default function App() {
                   <option value="preview">Preview</option>
                   <option value="qanet">QANet</option>
                 </select>
-                <button
-                  onClick={onConnectWallet}
-                  disabled={availableAPIs.length === 0}
-                  className="btn btn-primary"
-                >
+                <button onClick={onConnectWallet} disabled={availableAPIs.length === 0} className="btn btn-primary">
                   {availableAPIs.length > 0 ? 'Connect Wallet' : 'No Wallet Detected'}
                 </button>
               </>
             ) : (
               <>
                 {networkId === 'undeployed' && (
-                  <button
-                    onClick={onRequestDustFromFaucet}
-                    disabled={isLoading}
-                    className="btn btn-accent"
-                  >
+                  <button onClick={onRequestDustFromFaucet} disabled={isLoading} className="btn btn-accent">
                     {isLoading ? 'Processing...' : 'Get Tokens from Faucet'}
                   </button>
                 )}
@@ -503,17 +472,11 @@ export default function App() {
           <div className="wallet-info">
             <div className="network-info">
               <span className="info-label">Contract Address:</span>
-              <code className="address">
-                {deployed?.deployTxData.public.contractAddress ?? '—'}
-              </code>
+              <code className="address">{deployed?.deployTxData.public.contractAddress ?? '—'}</code>
             </div>
           </div>
           <div className="wallet-actions">
-            <button
-              onClick={onDeploy}
-              disabled={!providers || isLoading}
-              className="btn btn-primary"
-            >
+            <button onClick={onDeploy} disabled={!providers || isLoading} className="btn btn-primary">
               {isLoading ? 'Processing...' : 'Deploy Contract'}
             </button>
           </div>

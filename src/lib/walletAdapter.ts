@@ -73,12 +73,8 @@ export function createWalletProvidersFromConnectedAPI(
         console.log('[WalletAdapter] balanceTx: Serialized transaction length:', serialized.length);
 
         const serializedStr = uint8ArrayToHex(serialized);
-        console.log(
-          `[WalletAdapter] balanceTx: Converted to hex string length: ${serializedStr.length}`
-        );
-        console.log(
-          `[WalletAdapter] balanceTx: Converted to hex string beginning128=[${serializedStr.slice(0, 128)}]`
-        );
+        console.log(`[WalletAdapter] balanceTx: Converted to hex string length: ${serializedStr.length}`);
+        console.log(`[WalletAdapter] balanceTx: Converted to hex string beginning128=[${serializedStr.slice(0, 128)}]`);
         console.log(
           `[WalletAdapter] balanceTx: as String first 128 chars: ${new TextDecoder().decode(tx.serialize()).slice(0, 128)}]`
         );
@@ -89,25 +85,18 @@ export function createWalletProvidersFromConnectedAPI(
 
         console.log(`[WalletAdapter] balanceTx: toString: ${result.toString()}]`);
 
-        console.log(
-          '[WalletAdapter] balanceTx: Received response from wallet, tx string length:',
-          result.tx.length
-        );
+        console.log('[WalletAdapter] balanceTx: Received response from wallet, tx string length:', result.tx.length);
 
         console.log('[WalletAdapter] balanceTx: Deserializing balanced transaction');
         const resultBytes = hexToUint8Array(result.tx);
-        console.log(
-          '[WalletAdapter] balanceTx: Converted response to Uint8Array length:',
-          resultBytes.length
-        );
+        console.log('[WalletAdapter] balanceTx: Converted response to Uint8Array length:', resultBytes.length);
 
         console.log('[WalletAdapter] balanceTx: Deserializing transaction');
-        const deserializedTx = Transaction.deserialize(
-          'signature',
-          'proof',
-          'binding',
-          resultBytes
-        ) as Transaction<SignatureEnabled, Proof, Binding>;
+        const deserializedTx = Transaction.deserialize('signature', 'proof', 'binding', resultBytes) as Transaction<
+          SignatureEnabled,
+          Proof,
+          Binding
+        >;
         console.log('[WalletAdapter] balanceTx: Successfully deserialized transaction');
 
         return deserializedTx;
@@ -126,10 +115,7 @@ export function createWalletProvidersFromConnectedAPI(
         console.log('[WalletAdapter] submitTx: Serialized transaction length:', serialized.length);
 
         const serializedStr = uint8ArrayToHex(serialized);
-        console.log(
-          '[WalletAdapter] submitTx: Converted to hex string length:',
-          serializedStr.length
-        );
+        console.log('[WalletAdapter] submitTx: Converted to hex string length:', serializedStr.length);
 
         console.log(`[WalletAdapter] submitTx: Submitting transaction to wallet: ${tx.toString()}`);
         await connectedAPI.submitTransaction(serializedStr);
