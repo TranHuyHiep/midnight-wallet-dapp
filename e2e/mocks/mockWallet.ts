@@ -59,7 +59,8 @@ export function createMockWallet(): MockInitialAPI {
           shieldedEncryptionPublicKey: '0x' + '00'.repeat(32),
         }),
         getUnshieldedAddress: async () => ({
-          unshieldedAddress: 'addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae',
+          unshieldedAddress:
+            'addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae',
         }),
         getShieldedBalances: async () => ({
           tNIGHT: 1000000n,
