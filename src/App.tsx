@@ -370,7 +370,9 @@ export default function App() {
       };
 
       await submitCallTx(providers!, callTxOptions);
-      appendLog(`Withdrew ${withdrawNightAmount} STAR (${Number(withdrawNightAmount) / 1_000_000} NIGHT) to ${address.unshieldedAddress}`);
+      appendLog(
+        `Withdrew ${withdrawNightAmount} STAR (${Number(withdrawNightAmount) / 1_000_000} NIGHT) to ${address.unshieldedAddress}`
+      );
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       console.error(e);
