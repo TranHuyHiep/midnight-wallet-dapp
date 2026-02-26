@@ -186,7 +186,7 @@ export default function App() {
       appendLog(`Your Unshielded Address: ${unshieldedAddress.unshieldedAddress}`);
 
       const config = await connectedAPI.getConfiguration();
-      appendLog('Transferring 1000 Night tokens from faucet...');
+      appendLog('Transferring 1,000,000 STAR (1 NIGHT) from faucet...');
 
       const txHash = await transferUnshieldedFromFaucet(
         unshieldedAddress.unshieldedAddress,
@@ -335,7 +335,7 @@ export default function App() {
       };
 
       await submitCallTx(providers!, callTxOptions);
-      appendLog(`Deposited ${depositNightAmount} NIGHT tokens`);
+      appendLog(`Deposited ${depositNightAmount} STAR (${Number(depositNightAmount) / 1_000_000} NIGHT)`);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       console.error(e);
@@ -370,7 +370,9 @@ export default function App() {
       };
 
       await submitCallTx(providers!, callTxOptions);
-      appendLog(`Withdrew ${withdrawNightAmount} NIGHT tokens to ${address.unshieldedAddress}`);
+      appendLog(
+        `Withdrew ${withdrawNightAmount} STAR (${Number(withdrawNightAmount) / 1_000_000} NIGHT) to ${address.unshieldedAddress}`
+      );
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       console.error(e);
@@ -560,15 +562,18 @@ export default function App() {
               <h2>NIGHT Tokens</h2>
             </div>
             <div className="card-content">
+              <p className="info-text" style={{ fontSize: '0.85rem', color: '#888', marginBottom: '1rem' }}>
+                1,000,000 STAR = 1 NIGHT
+              </p>
               <div className="form-group">
-                <label htmlFor="depositNightAmount">Deposit Amount</label>
+                <label htmlFor="depositNightAmount">Deposit Amount (STAR)</label>
                 <input
                   id="depositNightAmount"
                   type="number"
                   value={depositNightAmount}
                   onChange={(e) => setDepositNightAmount(e.target.value)}
                   className="input"
-                  placeholder="50"
+                  placeholder="1500"
                 />
               </div>
               <button
@@ -582,14 +587,14 @@ export default function App() {
               <div className="divider"></div>
 
               <div className="form-group">
-                <label htmlFor="withdrawNightAmount">Withdraw Amount</label>
+                <label htmlFor="withdrawNightAmount">Withdraw Amount (STAR)</label>
                 <input
                   id="withdrawNightAmount"
                   type="number"
                   value={withdrawNightAmount}
                   onChange={(e) => setWithdrawNightAmount(e.target.value)}
                   className="input"
-                  placeholder="25"
+                  placeholder="500"
                 />
               </div>
               <button
