@@ -115,9 +115,12 @@ export async function transferUnshieldedFromFaucet(
   };
   console.log('transferUnshieldedFromFaucet: configuration=', configuration);
 
+  console.log('transferUnshieldedFromFaucet: creating shielded wallet...');
   const Shielded = ShieldedWallet(configuration);
   const faucetShielded = Shielded.startWithSeed(faucetShieldedSeed);
+  console.log('transferUnshieldedFromFaucet: shielded wallet created, methods:', Object.keys(faucetShielded));
 
+  console.log('transferUnshieldedFromFaucet: creating dust wallet...');
   const Dust = DustWallet({
     ...configuration,
     costParameters: {
@@ -127,13 +130,17 @@ export async function transferUnshieldedFromFaucet(
   });
   const dustParameters = ledger.LedgerParameters.initialParameters().dust;
   const faucetDust = Dust.startWithSeed(faucetDustSeed, dustParameters);
+  console.log('transferUnshieldedFromFaucet: dust wallet created');
 
+  console.log('transferUnshieldedFromFaucet: creating unshielded wallet...');
   const faucetUnshieldedKeystore = createKeystore(faucetUnshieldedSeed, NetworkId.NetworkId.Undeployed);
   const faucetUnshielded = UnshieldedWallet({
     ...configuration,
     txHistoryStorage: new InMemoryTransactionHistoryStorage(),
   }).startWithPublicKey(PublicKey.fromKeyStore(faucetUnshieldedKeystore));
+  console.log('transferUnshieldedFromFaucet: unshielded wallet created');
 
+  console.log('transferUnshieldedFromFaucet: initializing WalletFacade...');
   const faucetFacade = await WalletFacade.init({
     configuration: {
       ...configuration,
@@ -147,6 +154,7 @@ export async function transferUnshieldedFromFaucet(
     unshielded: () => faucetUnshielded,
     dust: () => faucetDust,
   });
+  console.log('transferUnshieldedFromFaucet: WalletFacade initialized');
 
   const shieldedSecretKeys = ledger.ZswapSecretKeys.fromSeed(faucetShieldedSeed);
   const dustSecretKey = ledger.DustSecretKey.fromSeed(faucetDustSeed);
@@ -186,6 +194,7 @@ export async function transferUnshieldedFromFaucet(
 
     console.log('transferUnshieldedFromFaucet: finalizing transaction...');
     const finalizedTx = await faucetFacade.finalizeRecipe(signedTx);
+    console.log('transferUnshieldedFromFaucet: transaction finalized, type:', typeof finalizedTx, 'methods:', Object.keys(finalizedTx || {}));
 
     console.log('transferUnshieldedFromFaucet: submitting transaction...');
     return await faucetFacade.submitTransaction(finalizedTx);

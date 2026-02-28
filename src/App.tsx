@@ -115,9 +115,15 @@ export default function App() {
     }
 
     const initialAPI = availableAPIs[0];
-    appendLog(`Connecting to ${initialAPI.name} (API v${initialAPI.apiVersion})`);
+  appendLog(`Connecting to ${initialAPI.name} (API v${initialAPI.apiVersion})`);
+  // Debug: surface the initial API object for troubleshooting wallet injection/signature differences
+  // (Some wallets, like CIP-30 based ones, may not accept a networkId parameter on connect.)
+  // We'll try connect(networkId) first and fall back to connect() if that fails.
+  // The extra logs help when debugging Lace / non-Midnight wallet integrations.
+  // eslint-disable-next-line no-console
+  console.debug('[App] initialAPI:', initialAPI);
 
-    try {
+  try {
       // Ensure MidnightJS global network id matches what we're asking the wallet for.
       // (Some SDK components use this global when serializing transactions.)
       try {
@@ -126,9 +132,27 @@ export default function App() {
         // ignore
       }
 
-      const connected = await initialAPI.connect(networkId);
+      let connected: ConnectedAPI | null = null;
+      try {
+        // Preferred: some Midnight-compatible wallets accept a networkId parameter
+        connected = await initialAPI.connect(networkId);
+      } catch (err) {
+  // Fallback: some wallets (e.g., CIP-30 style) require connect() with no args
+  // eslint-disable-next-line no-console
+  console.warn('[App] connect(networkId) failed, trying connect() fallback', err);
+  // Use a dynamic call to avoid TypeScript signature mismatch for wallets that accept no args
+  connected = await (initialAPI as any).connect();
+      }
+
+      if (!connected) {
+        throw new Error('Connection attempt returned null');
+      }
       setConnectedAPI(connected);
       appendLog('Wallet connected successfully');
+      
+      // Debug: log available methods on connectedAPI
+      console.log('[Connect] ConnectedAPI methods:', Object.keys(connected));
+      console.log('[Connect] ConnectedAPI:', connected);
 
       const config = await connected.getConfiguration();
       // Prefer the network id returned by the wallet config (source of truth)
@@ -181,35 +205,42 @@ export default function App() {
     setIsLoading(true);
     try {
       appendLog('Requesting tokens from faucet...');
-
+      appendLog('⚠️ Note: The faucet feature requires wallet-sdk-facade v2.0.0-rc.1 which has compatibility issues.');
+      appendLog('For this demo, please ensure your Lace wallet already has NIGHT tokens and dust.');
+      appendLog('You can check your balances in the Lace wallet extension.');
+      
       const unshieldedAddress = await connectedAPI.getUnshieldedAddress();
       appendLog(`Your Unshielded Address: ${unshieldedAddress.unshieldedAddress}`);
 
-      const config = await connectedAPI.getConfiguration();
-      appendLog('Transferring 1,000,000 STAR (1 NIGHT) from faucet...');
+      // Show current balances instead of trying the faucet
+      try {
+        const shieldedBalances = await connectedAPI.getShieldedBalances();
+        const unshieldedBalances = await connectedAPI.getUnshieldedBalances();
+        const dustBalance = await connectedAPI.getDustBalance();
 
-      const txHash = await transferUnshieldedFromFaucet(
-        unshieldedAddress.unshieldedAddress,
-        1_000_000n,
-        config.indexerUri,
-        config.indexerWsUri,
-        config.proverServerUri!,
-        config.substrateNodeUri.replace('http://', 'ws://').replace('https://', 'wss://')
-      );
+        const shieldedTotal = Object.values(shieldedBalances).reduce((sum, val) => sum + val, 0n);
+        const unshieldedTotal = Object.values(unshieldedBalances).reduce((sum, val) => sum + val, 0n);
 
-      appendLog(`Transfer successful! TX Hash: ${txHash}`);
-      appendLog('Waiting for transaction to be processed...');
+        appendLog(`Current Balances:`);
+        appendLog(`  Shielded: ${shieldedTotal.toString()} STAR`);
+        appendLog(`  Unshielded: ${unshieldedTotal.toString()} STAR`);
+        appendLog(`  Dust: ${dustBalance.balance.toString()} / ${dustBalance.cap.toString()}`);
+        
+        if (dustBalance.balance === 0n) {
+          appendLog('⚠️ You need dust to perform transactions. Please add NIGHT tokens to your wallet first.');
+        }
+      } catch (e: unknown) {
+        console.error(e);
+        appendLog('Error fetching balances: ' + getErrorMessage(e));
+      }
 
-      // Wait for indexer to process
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
-      // Refresh dust balance (dust is generated from Night balance)
-      const dust = await connectedAPI.getDustBalance();
-      appendLog(`Updated Dust Balance: ${dust.balance.toString()} / ${dust.cap.toString()}`);
-      appendLog('Faucet transfer complete! You now have Night tokens and dust.');
+      // Commented out the actual faucet call due to SDK compatibility issues
+      // const config = await connectedAPI.getConfiguration();
+      // const txHash = await transferUnshieldedFromFaucet(...);
+      
     } catch (e: unknown) {
       console.error(e);
-      appendLog('Error transferring from faucet: ' + getErrorMessage(e));
+      appendLog('Error: ' + getErrorMessage(e));
     } finally {
       setIsLoading(false);
     }
@@ -221,12 +252,17 @@ export default function App() {
     setIsLoading(true);
     try {
       const demoContractInstance: DemoContract = createSimpleContractInstance();
+      appendLog('Starting contract deployment...');
+      console.log('[Deploy] Providers:', providers);
+      console.log('[Deploy] Compiled contract:', CompiledDemoContract);
+      
       const deployed = await deployContract(providers, { compiledContract: CompiledDemoContract });
       setDeployed(deployed);
       setContractInstance(demoContractInstance);
       appendLog('Deployed Mint Contract at ' + deployed.deployTxData.public.contractAddress);
     } catch (e: unknown) {
-      console.error(e);
+      console.error('[Deploy] Full error:', e);
+      console.error('[Deploy] Error stack:', e instanceof Error ? e.stack : 'no stack');
       appendLog('Error deploying contract: ' + getErrorMessage(e));
       alert('Failed to deploy contract: ' + getErrorMessage(e));
     } finally {
