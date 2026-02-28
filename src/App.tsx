@@ -80,6 +80,72 @@ export default function App() {
   const [joinContractAddress, setJoinContractAddress] = useState<string>('');
   const appendLog = (msg: string) => setTxLog((prev) => [new Date().toLocaleTimeString() + ': ' + msg, ...prev]);
 
+  // Function to fetch ledger state from contract - using the correct API from example-counter
+  const fetchLedgerState = React.useCallback(async (contractAddress: string, maxRetries = 10): Promise<boolean> => {
+    if (!providers) return false;
+    
+    try {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          appendLog(`🔍 Querying contract state (${attempt}/${maxRetries})...`);
+          
+          // Use the correct API from example-counter: publicDataProvider.queryContractState()
+          const contractState = await providers.publicDataProvider.queryContractState(contractAddress);
+          
+          if (contractState != null) {
+            appendLog(`✅ Contract state found!`);
+            console.log('Contract state:', contractState);
+            
+            try {
+              // Use the ledger function from compiled contract to decode state
+              const ledgerData = CompiledContract.ledger(contractState.data);
+              
+              setSumTEX(ledgerData.sumTEX);
+              setSumNIGHT(ledgerData.sumNIGHT);
+              
+              // Get lastMintedColor and convert to hex string for display
+              if (ledgerData.lastMintedColor) {
+                const colorBytes = new Uint8Array(ledgerData.lastMintedColor);
+                const colorHex = '#' + Array.from(colorBytes.slice(0, 3))
+                  .map(b => b.toString(16).padStart(2, '0'))
+                  .join('');
+                setMintedColor(colorHex);
+                appendLog(`✅ Ledger loaded - TEX: ${ledgerData.sumTEX}, NIGHT: ${ledgerData.sumNIGHT}, Color: ${colorHex}`);
+              } else {
+                appendLog(`✅ Ledger loaded - TEX: ${ledgerData.sumTEX}, NIGHT: ${ledgerData.sumNIGHT}`);
+              }
+              
+              return true;
+            } catch (decodeError) {
+              console.error('Decode error:', decodeError);
+              appendLog(`⚠️ State found but decode failed: ${getErrorMessage(decodeError)}`);
+            }
+          } else {
+            appendLog(`No contract state yet (attempt ${attempt})`);
+          }
+          
+          // Wait before retry
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        } catch (fetchError) {
+          console.error('Query error:', fetchError);
+          appendLog(`Query failed: ${getErrorMessage(fetchError)}`);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+      
+      appendLog(`⚠️ Could not load state after ${maxRetries} attempts. Counters will track from transactions.`);
+      return false;
+    } catch (e: unknown) {
+      console.error('fetchLedgerState error:', e);
+      appendLog(`Error: ${getErrorMessage(e)}`);
+      return false;
+    }
+  }, [providers]);
+
   // Important: MidnightJS has a *global* network-id that must match the wallet/network.
   // If this is left at the default (often `undeployed`), transactions can be built for the
   // wrong network and Lace will fail when balancing/submitting.
@@ -282,12 +348,11 @@ export default function App() {
       setDeployed(mockDeployed);
       setContractInstance(demoContractInstance);
       
-      // Reset counters when joining (we don't know the actual state)
-      setSumTEX(0n);
-      setSumNIGHT(0n);
+      // Fetch actual ledger state from blockchain
+      appendLog('Fetching ledger state from blockchain...');
+      await fetchLedgerState(joinContractAddress);
       
       appendLog(`✅ Successfully joined contract at ${joinContractAddress}`);
-      appendLog('⚠️ Note: Counter values start at 0. They will update as you perform transactions.');
     } catch (e: unknown) {
       console.error(e);
       appendLog('Error joining contract: ' + getErrorMessage(e));

@@ -2,6 +2,7 @@ import CompactStandardLibrary;
 
 export ledger sumTEX: Counter;
 export ledger sumNIGHT: Counter;
+export ledger lastMintedColor: Bytes<32>;
 
 /**
  * Mint using mintUnshieldedToken() + receiveUnshielded()
@@ -17,6 +18,9 @@ export circuit mintAndReceive(amount: Uint<64>): Bytes<32> {
 
     receiveUnshielded(color, disclose(amount) as Uint<128>);
     sumTEX.increment(disclose(amount) as Uint<16>);
+    
+    // Store the minted color in ledger
+    lastMintedColor.write(disclose(color));
 
     return color;
 }

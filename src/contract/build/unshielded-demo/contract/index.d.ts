@@ -29,6 +29,7 @@ export type Circuits<PS> = {
 export type Ledger = {
   readonly sumTEX: bigint;
   readonly sumNIGHT: bigint;
+  readonly lastMintedColor: Uint8Array;
 }
 
 export type ContractReferenceLocations = any;

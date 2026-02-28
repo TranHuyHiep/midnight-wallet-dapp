@@ -93,6 +93,7 @@ The wallet connector is expected at `window.midnight.lace` and must support `ena
 **Build and run:**
 
 ```bash
+compact compile src/contract/contracts/unshielded-demo.compact src/contract/build/unshielded-demo/
 docker build -t midnight-lace-dapp .
 docker run -p 8080:8080 midnight-lace-dapp
 ```
