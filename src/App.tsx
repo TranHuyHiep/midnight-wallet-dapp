@@ -75,6 +75,9 @@ export default function App() {
   const [mintedColor, setMintedColor] = useState<string>('');
   const [txLog, setTxLog] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [sumTEX, setSumTEX] = useState<bigint>(0n);
+  const [sumNIGHT, setSumNIGHT] = useState<bigint>(0n);
+  const [joinContractAddress, setJoinContractAddress] = useState<string>('');
   const appendLog = (msg: string) => setTxLog((prev) => [new Date().toLocaleTimeString() + ': ' + msg, ...prev]);
 
   // Important: MidnightJS has a *global* network-id that must match the wallet/network.
@@ -116,6 +119,12 @@ export default function App() {
 
     const initialAPI = availableAPIs[0];
     appendLog(`Connecting to ${initialAPI.name} (API v${initialAPI.apiVersion})`);
+    // Debug: surface the initial API object for troubleshooting wallet injection/signature differences
+    // (Some wallets, like CIP-30 based ones, may not accept a networkId parameter on connect.)
+    // We'll try connect(networkId) first and fall back to connect() if that fails.
+    // The extra logs help when debugging Lace / non-Midnight wallet integrations.
+    // eslint-disable-next-line no-console
+    console.debug('[App] initialAPI:', initialAPI);
 
     try {
       // Ensure MidnightJS global network id matches what we're asking the wallet for.
@@ -126,7 +135,21 @@ export default function App() {
         // ignore
       }
 
-      const connected = await initialAPI.connect(networkId);
+      let connected: ConnectedAPI | null = null;
+      try {
+        // Preferred: some Midnight-compatible wallets accept a networkId parameter
+        connected = await initialAPI.connect(networkId);
+      } catch (err) {
+        // Fallback: some wallets (e.g., CIP-30 style) require connect() with no args
+        // eslint-disable-next-line no-console
+        console.warn('[App] connect(networkId) failed, trying connect() fallback', err);
+        // Use a dynamic call to avoid TypeScript signature mismatch for wallets that accept no args
+        connected = await (initialAPI as any).connect();
+      }
+
+      if (!connected) {
+        throw new Error('Connection attempt returned null');
+      }
       setConnectedAPI(connected);
       appendLog('Wallet connected successfully');
 
@@ -224,6 +247,9 @@ export default function App() {
       const deployed = await deployContract(providers, { compiledContract: CompiledDemoContract });
       setDeployed(deployed);
       setContractInstance(demoContractInstance);
+      // Reset counters on new deployment
+      setSumTEX(0n);
+      setSumNIGHT(0n);
       appendLog('Deployed Mint Contract at ' + deployed.deployTxData.public.contractAddress);
     } catch (e: unknown) {
       console.error(e);
@@ -232,6 +258,52 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function onJoinContract() {
+    if (!providers) return alert('Connect wallet first');
+    if (!joinContractAddress.trim()) return alert('Please enter a contract address');
+
+    setIsLoading(true);
+    try {
+      appendLog(`Joining contract at ${joinContractAddress}...`);
+      
+      const demoContractInstance: DemoContract = createSimpleContractInstance();
+      
+      // Create a mock deployed contract object to connect to existing contract
+      const mockDeployed = {
+        deployTxData: {
+          public: {
+            contractAddress: joinContractAddress,
+          },
+        },
+      } as DeployedContract<CompiledContract.Contract>;
+      
+      setDeployed(mockDeployed);
+      setContractInstance(demoContractInstance);
+      
+      // Reset counters when joining (we don't know the actual state)
+      setSumTEX(0n);
+      setSumNIGHT(0n);
+      
+      appendLog(`✅ Successfully joined contract at ${joinContractAddress}`);
+      appendLog('⚠️ Note: Counter values start at 0. They will update as you perform transactions.');
+    } catch (e: unknown) {
+      console.error(e);
+      appendLog('Error joining contract: ' + getErrorMessage(e));
+      alert('Failed to join contract: ' + getErrorMessage(e));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function onDisconnectContract() {
+    setDeployed(null);
+    setContractInstance(null);
+    setSumTEX(0n);
+    setSumNIGHT(0n);
+    setMintedColor('');
+    appendLog('Disconnected from contract');
   }
 
   async function onMint() {
@@ -251,6 +323,8 @@ export default function App() {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
       setMintedColor('0x' + hex);
+      // Update TEX counter (increment by mint amount)
+      setSumTEX((prev) => prev + BigInt(mintAmount));
       appendLog(`Minted ${mintAmount} tokens with color 0x${hex}`);
     } catch (e: unknown) {
       console.error(e);
@@ -288,6 +362,9 @@ export default function App() {
       };
 
       await submitCallTx(providers!, callTxOptions);
+      // Update counters: sendToUser decrements TEX, increments NIGHT
+      setSumTEX((prev) => prev - BigInt(claimAmount));
+      setSumNIGHT((prev) => prev + BigInt(claimAmount));
       appendLog(`Claimed ${claimAmount} tokens to address ${address.unshieldedAddress}`);
     } catch (e: unknown) {
       console.error(e);
@@ -303,14 +380,31 @@ export default function App() {
 
     setIsLoading(true);
     try {
+      const address = await connectedAPI?.getUnshieldedAddress();
+
+      if (!address?.unshieldedAddress) {
+        return alert('No unshielded address available');
+      }
+
+      appendLog(`Unshielded address: ${address.unshieldedAddress}`);
+
+      // Decode bech32m address to get raw bytes
+      const decoded = bech32m.decode(address.unshieldedAddress, 1000);
+      const addressBytes = new Uint8Array(bech32m.fromWords(decoded.words));
+
+      appendLog(`Decoded address bytes (${addressBytes.length} bytes)`);
+
       const callTxOptions = {
         compiledContract: CompiledDemoContract,
         contractAddress: deployed.deployTxData.public.contractAddress,
         circuitId: 'receiveTokens' as DemoCircuits,
-        args: [BigInt(receiveAmount)] as [bigint],
+        args: [BigInt(receiveAmount), { bytes: addressBytes }] as [bigint, { bytes: Uint8Array }],
       };
 
       await submitCallTx(providers!, callTxOptions);
+      // Update counters: receiveTokens increments TEX, decrements NIGHT
+      setSumTEX((prev) => prev + BigInt(receiveAmount));
+      setSumNIGHT((prev) => prev - BigInt(receiveAmount));
       appendLog(`Received ${receiveAmount} tokens`);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
@@ -478,16 +572,45 @@ export default function App() {
             </div>
           </div>
           <div className="wallet-actions">
-            <button onClick={onDeploy} disabled={!providers || isLoading} className="btn btn-primary">
-              {isLoading ? 'Processing...' : 'Deploy Contract'}
-            </button>
+            {!deployed ? (
+              <>
+                <button onClick={onDeploy} disabled={!providers || isLoading} className="btn btn-primary">
+                  {isLoading ? 'Processing...' : 'Deploy New Contract'}
+                </button>
+                <div style={{ marginTop: '16px', width: '100%' }}>
+                  <div className="form-group">
+                    <label htmlFor="joinContractAddress">Or Join Existing Contract</label>
+                    <input
+                      id="joinContractAddress"
+                      type="text"
+                      value={joinContractAddress}
+                      onChange={(e) => setJoinContractAddress(e.target.value)}
+                      className="input"
+                      placeholder="Enter contract address..."
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <button
+                    onClick={onJoinContract}
+                    disabled={!providers || !joinContractAddress.trim() || isLoading}
+                    className="btn btn-secondary btn-block"
+                  >
+                    {isLoading ? 'Processing...' : 'Join Contract'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button onClick={onDisconnectContract} disabled={isLoading} className="btn btn-outline">
+                Disconnect from Contract
+              </button>
+            )}
           </div>
         </section>
 
         <section className="contracts-grid">
           <div className="card">
             <div className="card-header">
-              <h2>Unshielded Tokens</h2>
+              <h2>Tex Tokens</h2>
             </div>
             <div className="card-content">
               <div className="form-group">
@@ -506,7 +629,7 @@ export default function App() {
                 disabled={!deployed || !providers || isLoading}
                 className="btn btn-accent btn-block"
               >
-                {isLoading ? 'Processing...' : 'Mint Tokens'}
+                {isLoading ? 'Processing...' : 'Mint TEX Tokens'}
               </button>
               <div className="info-box">
                 <span className="info-label">Minted Color:</span>
@@ -516,7 +639,7 @@ export default function App() {
               <div className="divider"></div>
 
               <div className="form-group">
-                <label htmlFor="claimAmount">Claim Amount</label>
+                <label htmlFor="claimAmount">Swap Night to TEX</label>
                 <input
                   id="claimAmount"
                   type="number"
@@ -531,13 +654,13 @@ export default function App() {
                 disabled={!deployed || !mintedColor || !providers || isLoading}
                 className="btn btn-accent btn-block"
               >
-                {isLoading ? 'Processing...' : 'Claim Tokens'}
+                {isLoading ? 'Processing...' : 'Swap to TEX'}
               </button>
 
               <div className="divider"></div>
 
               <div className="form-group">
-                <label htmlFor="receiveAmount">Deposit Amount</label>
+                <label htmlFor="receiveAmount">Swap TEX to NIGHT</label>
                 <input
                   id="receiveAmount"
                   type="number"
@@ -552,58 +675,32 @@ export default function App() {
                 disabled={!deployed || !providers || isLoading}
                 className="btn btn-accent btn-block"
               >
-                {isLoading ? 'Processing...' : 'Deposit Tokens'}
+                {isLoading ? 'Processing...' : 'Swap to NIGHT'}
               </button>
             </div>
           </div>
 
           <div className="card">
             <div className="card-header">
-              <h2>NIGHT Tokens</h2>
+              <h2>Pool</h2>
             </div>
             <div className="card-content">
               <p className="info-text" style={{ fontSize: '0.85rem', color: '#888', marginBottom: '1rem' }}>
-                1,000,000 STAR = 1 NIGHT
+                1 TEX = 1 NIGHT
               </p>
               <div className="form-group">
-                <label htmlFor="depositNightAmount">Deposit Amount (STAR)</label>
-                <input
-                  id="depositNightAmount"
-                  type="number"
-                  value={depositNightAmount}
-                  onChange={(e) => setDepositNightAmount(e.target.value)}
-                  className="input"
-                  placeholder="1500"
-                />
+                <label htmlFor="depositNightAmount">Night Supply:</label>
+                <code className="address" style={{ marginLeft: '8px', color: '#00ff94', fontSize: '20px', fontWeight: 'bold' }}>
+                  {sumNIGHT.toString()}
+                </code>
               </div>
-              <button
-                onClick={onDepositNight}
-                disabled={!deployed || !providers || isLoading}
-                className="btn btn-accent btn-block"
-              >
-                {isLoading ? 'Processing...' : 'Deposit NIGHT'}
-              </button>
-
               <div className="divider"></div>
-
               <div className="form-group">
-                <label htmlFor="withdrawNightAmount">Withdraw Amount (STAR)</label>
-                <input
-                  id="withdrawNightAmount"
-                  type="number"
-                  value={withdrawNightAmount}
-                  onChange={(e) => setWithdrawNightAmount(e.target.value)}
-                  className="input"
-                  placeholder="500"
-                />
+                <label htmlFor="withdrawNightAmount">TEX Supply: </label>
+                <code className="address" style={{ marginLeft: '8px', color: '#a78bfa', fontSize: '20px', fontWeight: 'bold' }}>
+                  {sumTEX.toString()}
+                </code>
               </div>
-              <button
-                onClick={onWithdrawNight}
-                disabled={!deployed || !providers || isLoading}
-                className="btn btn-accent btn-block"
-              >
-                {isLoading ? 'Processing...' : 'Withdraw NIGHT'}
-              </button>
             </div>
           </div>
         </section>

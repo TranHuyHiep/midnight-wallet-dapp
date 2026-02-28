@@ -8,12 +8,9 @@ export type ImpureCircuits<PS> = {
   sendToUser(context: __compactRuntime.CircuitContext<PS>,
              amount_0: bigint,
              user_addr_0: { bytes: Uint8Array }): __compactRuntime.CircuitResults<PS, []>;
-  receiveTokens(context: __compactRuntime.CircuitContext<PS>, amount_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  receiveNightTokens(context: __compactRuntime.CircuitContext<PS>,
-                     amount_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  sendNightTokensToUser(context: __compactRuntime.CircuitContext<PS>,
-                        amount_0: bigint,
-                        user_addr_0: { bytes: Uint8Array }): __compactRuntime.CircuitResults<PS, []>;
+  receiveTokens(context: __compactRuntime.CircuitContext<PS>,
+                amount_0: bigint,
+                user_addr_0: { bytes: Uint8Array }): __compactRuntime.CircuitResults<PS, []>;
 }
 
 export type PureCircuits = {
@@ -24,15 +21,14 @@ export type Circuits<PS> = {
   sendToUser(context: __compactRuntime.CircuitContext<PS>,
              amount_0: bigint,
              user_addr_0: { bytes: Uint8Array }): __compactRuntime.CircuitResults<PS, []>;
-  receiveTokens(context: __compactRuntime.CircuitContext<PS>, amount_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  receiveNightTokens(context: __compactRuntime.CircuitContext<PS>,
-                     amount_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  sendNightTokensToUser(context: __compactRuntime.CircuitContext<PS>,
-                        amount_0: bigint,
-                        user_addr_0: { bytes: Uint8Array }): __compactRuntime.CircuitResults<PS, []>;
+  receiveTokens(context: __compactRuntime.CircuitContext<PS>,
+                amount_0: bigint,
+                user_addr_0: { bytes: Uint8Array }): __compactRuntime.CircuitResults<PS, []>;
 }
 
 export type Ledger = {
+  readonly sumTEX: bigint;
+  readonly sumNIGHT: bigint;
 }
 
 export type ContractReferenceLocations = any;

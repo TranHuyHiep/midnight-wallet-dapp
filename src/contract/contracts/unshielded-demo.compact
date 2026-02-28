@@ -1,5 +1,8 @@
 import CompactStandardLibrary;
 
+export ledger sumTEX: Counter;
+export ledger sumNIGHT: Counter;
+
 /**
  * Mint using mintUnshieldedToken() + receiveUnshielded()
  */
@@ -13,38 +16,59 @@ export circuit mintAndReceive(amount: Uint<64>): Bytes<32> {
     );
 
     receiveUnshielded(color, disclose(amount) as Uint<128>);
+    sumTEX.increment(disclose(amount) as Uint<16>);
 
     return color;
 }
 
 /**
- * Send to user address
+ * Swap NIGHT to TEX
  */
 export circuit sendToUser(amount: Uint<64>, user_addr: UserAddress): [] {
     const domain = pad(32, "simple:receive");
     const color = tokenType(disclose(domain), kernel.self());
 
+    //Send TEX to user address
     sendUnshielded(
         color,
         disclose(amount) as Uint<128>,
         right<ContractAddress, UserAddress>(disclose(user_addr))
     );
+    sumTEX.decrement(disclose(amount) as Uint<16>);
+
+    //Receive NIGHT from user address
+    receiveUnshielded(default<Bytes<32>>, disclose(amount*1000000));
+    sumNIGHT.increment(disclose(amount) as Uint<16>);
 }
 
-export circuit receiveTokens(amount: Uint<128>): [] {
+/**
+ * Swap TEX to NIGHT
+ */
+export circuit receiveTokens(amount: Uint<128>, user_addr: UserAddress): [] {
     const domain = pad(32, "simple:receive");
     const color = tokenType(domain, kernel.self());
+
+    //Receive TEX from user address
     receiveUnshielded(color, disclose(amount));
-}
+    sumTEX.increment(disclose(amount) as Uint<16>);
 
-export circuit receiveNightTokens(amount: Uint<128>): [] {
-   receiveUnshielded(default<Bytes<32>>, disclose(amount));
-}
-
-export circuit sendNightTokensToUser(amount: Uint<64>, user_addr: UserAddress): [] {
+    //Send NIGHT to user address
     sendUnshielded(
         default<Bytes<32>>,
-        disclose(amount) as Uint<128>,
+        disclose(amount*1000000) as Uint<128>,
         right<ContractAddress, UserAddress>(disclose(user_addr))
     );
+    sumNIGHT.decrement(disclose(amount) as Uint<16>);
 }
+
+// export circuit receiveNightTokens(amount: Uint<128>): [] {
+//    receiveUnshielded(default<Bytes<32>>, disclose(amount));
+// }
+
+// export circuit sendNightTokensToUser(amount: Uint<64>, user_addr: UserAddress): [] {
+//     sendUnshielded(
+//         default<Bytes<32>>,
+//         disclose(amount) as Uint<128>,
+//         right<ContractAddress, UserAddress>(disclose(user_addr))
+//     );
+// }

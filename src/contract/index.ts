@@ -14,3 +14,4 @@
  */
 
 export * from './build/unshielded-demo/contract/index.js';
+export * from "./witnesses";
