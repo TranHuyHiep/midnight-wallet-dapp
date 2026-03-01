@@ -20,7 +20,7 @@ export circuit mintAndReceive(amount: Uint<64>): Bytes<32> {
     sumTEX.increment(disclose(amount) as Uint<16>);
     
     // Store the minted color in ledger
-    lastMintedColor.write(disclose(color));
+    lastMintedColor.write(color);
 
     return color;
 }

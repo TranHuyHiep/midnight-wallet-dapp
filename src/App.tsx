@@ -100,17 +100,37 @@ export default function App() {
               // Use the ledger function from compiled contract to decode state
               const ledgerData = CompiledContract.ledger(contractState.data);
               
+              console.log('Full ledger data:', ledgerData);
+              console.log('lastMintedColor raw:', ledgerData.lastMintedColor);
+              
               setSumTEX(ledgerData.sumTEX);
               setSumNIGHT(ledgerData.sumNIGHT);
               
               // Get lastMintedColor and convert to hex string for display
-              if (ledgerData.lastMintedColor) {
+              if (ledgerData.lastMintedColor && ledgerData.lastMintedColor.length > 0) {
+                // Check if all bytes are zero (default/empty value)
                 const colorBytes = new Uint8Array(ledgerData.lastMintedColor);
-                const colorHex = '#' + Array.from(colorBytes.slice(0, 3))
-                  .map(b => b.toString(16).padStart(2, '0'))
-                  .join('');
-                setMintedColor(colorHex);
-                appendLog(`✅ Ledger loaded - TEX: ${ledgerData.sumTEX}, NIGHT: ${ledgerData.sumNIGHT}, Color: ${colorHex}`);
+                const isAllZeros = colorBytes.every(b => b === 0);
+                
+                if (!isAllZeros) {
+                  // Use first 3 bytes for RGB color
+                  const colorHex = '#' + Array.from(colorBytes.slice(0, 3))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+                  
+                  console.log('Generated color hex:', colorHex);
+                  setMintedColor(colorHex);
+                  
+                  // Also store full 32-byte hex for display
+                  const fullColorHex = '0x' + Array.from(colorBytes)
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+                  
+                  appendLog(`✅ Ledger loaded - TEX: ${ledgerData.sumTEX}, NIGHT: ${ledgerData.sumNIGHT}`);
+                  appendLog(`   Color: ${fullColorHex.slice(0, 20)}...`);
+                } else {
+                  appendLog(`✅ Ledger loaded - TEX: ${ledgerData.sumTEX}, NIGHT: ${ledgerData.sumNIGHT} (no color minted yet)`);
+                }
               } else {
                 appendLog(`✅ Ledger loaded - TEX: ${ledgerData.sumTEX}, NIGHT: ${ledgerData.sumNIGHT}`);
               }
@@ -583,6 +603,7 @@ export default function App() {
                 >
                   <option value="undeployed">Undeployed</option>
                   <option value="preview">Preview</option>
+                  <option value="preprod">Preprod</option>
                   <option value="qanet">QANet</option>
                 </select>
                 <button onClick={onConnectWallet} disabled={availableAPIs.length === 0} className="btn btn-primary">
